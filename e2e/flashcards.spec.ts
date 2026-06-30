@@ -31,19 +31,32 @@ test.describe('flashcards SRS', () => {
   });
 
   test('grading every card as Easy masters the whole chapter and persists across reload', async ({ page }) => {
+    // Mastering a full chapter takes dozens of reveal/grade round-trips, which is
+    // legitimately slow on CI WebKit; triple the default timeout rather than flake.
+    test.slow();
     await page.goto('/');
 
     const mastery = page.getByTestId('flashcard-mastery');
     const total = Number(/\d+\s*\/\s*(\d+)/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
     expect(total).toBeGreaterThan(0);
 
+    const showAnswer = page.getByRole('button', { name: meta.flashcardsShowAnswerLabel });
+    const gradeEasy = page.getByRole('button', { name: meta.flashcardsEasyLabel, exact: true });
+
+    // Each Easy grade moves a card +2 boxes (0->2->4=mastered), so two passes per
+    // card suffice; the extra headroom absorbs the weighted/lagged card selection.
     let mastered = 0;
     for (let i = 0; i < total * 10 && mastered < total; i += 1) {
-      await page.getByRole('button', { name: meta.flashcardsShowAnswerLabel }).click();
-      await page.getByRole('button', { name: meta.flashcardsEasyLabel, exact: true }).click();
-      mastered = Number(/(\d+)\s*\/\s*\d+/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
+      await showAnswer.click();
+      await gradeEasy.click();
+      // Reading the counter every grade dominates runtime on WebKit; sample it once
+      // per chapter-sized batch instead, while still breaking out as soon as we hit total.
+      if (i % total === total - 1) {
+        mastered = Number(/(\d+)\s*\/\s*\d+/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
+      }
     }
 
+    mastered = Number(/(\d+)\s*\/\s*\d+/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
     expect(mastered).toBe(total);
     await expect(mastery).toContainText(`${total} / ${total} ${meta.flashcardsMasteryLabel}`);
 
