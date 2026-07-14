@@ -12,7 +12,7 @@ Thank you for helping improve the CTFL 4.0 Study Lab.
 
 ## Local setup
 
-Use Node 24 locally to match the CI baseline (`.nvmrc`):
+Use Node 26 locally to match the CI baseline (`.nvmrc`):
 
 ```bash
 nvm use

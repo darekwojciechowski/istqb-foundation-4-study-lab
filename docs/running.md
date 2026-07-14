@@ -4,7 +4,7 @@ This guide explains how to run the app locally, verify it, and build it for stat
 
 ## Requirements
 
-- Node.js 24 or newer
+- Node.js 26 or newer
 - npm
 - Git
 

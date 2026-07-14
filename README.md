@@ -2,7 +2,7 @@
 
 ![CI/CD](https://img.shields.io/github/actions/workflow/status/darekwojciechowski/istqb-foundation-4-study-lab/ci.yml?branch=main&style=flat-square&logo=github-actions&logoColor=white&label=CI%2FCD)
 ![Deploy](https://img.shields.io/github/actions/workflow/status/darekwojciechowski/istqb-foundation-4-study-lab/pages.yml?branch=main&style=flat-square&logo=github-pages&logoColor=white&label=Deploy)
-![Node](https://img.shields.io/badge/node-%3E%3D24-339933?style=flat-square&logo=node.js&logoColor=white)
+![Node](https://img.shields.io/badge/node-%3E%3D26-339933?style=flat-square&logo=node.js&logoColor=white)
 ![React](https://img.shields.io/npm/v/react?label=React&style=flat-square&logo=react&logoColor=white&color=61DAFB)
 ![TypeScript](https://img.shields.io/npm/v/typescript?label=TypeScript&style=flat-square&logo=typescript&logoColor=white&color=3178C6)
 ![Vite](https://img.shields.io/npm/v/vite?label=Vite&style=flat-square&logo=vite&logoColor=white&color=646CFF)
@@ -72,7 +72,7 @@ Always verify current details with your exam provider and the official ISTQB mat
 
 ## Getting started locally
 
-**Requirements:** Node.js 24+, npm, Git.
+**Requirements:** Node.js 26+, npm, Git.
 
 ```bash
 git clone https://github.com/darekwojciechowski/istqb-foundation-4-study-lab.git
