@@ -84,6 +84,38 @@ test.describe('chapter progress', () => {
   );
 
   test(
+    'switching mode with no draft answers switches immediately without a confirm',
+    {
+      tag: ['@critical'],
+      annotation: [{ type: 'requirement', description: REQ.QUIZ_RESET_GUARD }],
+    },
+    async ({ app, quiz, page }) => {
+      // Collect rather than assume: dismissing in the handler keeps the test from
+      // hanging if the guard regresses, and the collected list is the assertion.
+      const dialogs: string[] = [];
+      page.on('dialog', (dialog) => {
+        dialogs.push(dialog.message());
+        void dialog.dismiss();
+      });
+
+      await test.step('arrange: open a clean practice quiz with nothing drafted', async () => {
+        await app.goto();
+        await expect(quiz.radios({ checked: true })).toHaveCount(0);
+      });
+
+      await test.step('act: switch to exam mode', async () => {
+        await quiz.modeButton('exam').click();
+      });
+
+      await test.step('assert: exam mode is active and no confirm was raised', async () => {
+        await expect(quiz.modeButton('exam')).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.getByRole('timer')).toBeVisible();
+        expect(dialogs, 'a clean quiz must not prompt before discarding nothing').toEqual([]);
+      });
+    },
+  );
+
+  test(
     'switching mode with draft answers prompts a confirm that dismiss cancels and accept commits',
     {
       tag: ['@critical'],

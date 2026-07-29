@@ -29,10 +29,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps
-      - run: npm run test:e2e
-      - if: failure()
+        # A test that only goes green on retry must not pass CI silently.
+      - run: npm run test:e2e -- --fail-on-flaky-tests
+      - if: always()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+        # Traces, videos and screenshots land here, not in the HTML report directory.
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore

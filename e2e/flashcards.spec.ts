@@ -1,5 +1,6 @@
 import { knowledgePack } from '../src/knowledge/currentKnowledgePack';
-import { MAX_BOX } from '../src/lib/srs';
+import { MASTERED_BOX, MAX_BOX, selectNextCardId, type CardStates } from '../src/lib/srs';
+import { CURRENT_PROGRESS_METADATA, seedProgress } from './fixtures/seed';
 import { expect, test } from './fixtures/test';
 import { REQ } from './requirements';
 
@@ -7,18 +8,47 @@ const { meta } = knowledgePack;
 
 const FIRST_CHAPTER_ID = knowledgePack.syllabusChapters[0].id;
 
+const CHAPTER_CARD_IDS = knowledgePack.flashcards
+  .filter((flashcard) => flashcard.chapterId === FIRST_CHAPTER_ID)
+  .map((flashcard) => flashcard.id);
+
 /** Cards in the default chapter's deck — the denominator of the mastery read-out. */
-const CHAPTER_CARD_COUNT = knowledgePack.flashcards.filter(
-  (flashcard) => flashcard.chapterId === FIRST_CHAPTER_ID,
-).length;
+const CHAPTER_CARD_COUNT = CHAPTER_CARD_IDS.length;
+
+/** An `easy` grade promotes two boxes, so this is exactly one grade short of mastery. */
+const ONE_GRADE_SHORT_BOX = MASTERED_BOX - 2;
 
 /**
- * Grade budget for mastering the whole deck. Card selection is deterministic but
- * box-weighted and lag-limited, so a card can resurface before every other card has
- * been seen; two Easy grades per card is the floor, and this leaves generous headroom.
- * Overshooting is harmless — grading an already-mastered card leaves it at MAX_BOX.
+ * Builds a deck where every card is mastered except the one the app will actually
+ * open on, leaving that card a single Easy grade short.
+ *
+ * The first card is chosen by the real box-weighted selector, and lowering a card's
+ * box changes those weights — so rather than assume which card surfaces, ask the
+ * selector: try each candidate as the unmastered card and keep the one the selector
+ * then picks. That makes the seeding self-consistent instead of a guess, which is
+ * what the previous `CHAPTER_CARD_COUNT * 5` grade budget was papering over.
  */
-const MASTERY_GRADE_BUDGET = CHAPTER_CARD_COUNT * 5;
+function seedOneGradeShortOfFullMastery(): { cardStates: CardStates; targetId: string } {
+  for (const candidate of CHAPTER_CARD_IDS) {
+    const cardStates: CardStates = Object.fromEntries(
+      CHAPTER_CARD_IDS.map((cardId) => [
+        cardId,
+        { box: cardId === candidate ? ONE_GRADE_SHORT_BOX : MAX_BOX, seen: 3 },
+      ]),
+    );
+
+    const firstShown = selectNextCardId(CHAPTER_CARD_IDS, cardStates, {
+      seed: `${FIRST_CHAPTER_ID}:0`,
+      recentIds: [],
+    });
+
+    if (firstShown === candidate) {
+      return { cardStates, targetId: candidate };
+    }
+  }
+
+  throw new Error('No self-consistent seeding found: the card selector opened on a mastered card');
+}
 
 test.describe('flashcards SRS', () => {
   test(
@@ -56,27 +86,35 @@ test.describe('flashcards SRS', () => {
   );
 
   test(
-    'grading every card as Easy masters the whole chapter and persists across reload',
+    'the final Easy grade masters the chapter and the mastery state persists across reload',
     {
-      tag: ['@slow'],
+      tag: ['@critical'],
       annotation: [{ type: 'requirement', description: REQ.FLASHCARD_MASTERY }],
     },
-    async ({ app, flashcards }) => {
-      // Mastering a full chapter takes dozens of reveal/grade round-trips, which is
-      // legitimately slow on CI WebKit; triple the default timeout rather than flake.
-      test.slow();
+    async ({ app, flashcards, page }) => {
+      const { cardStates } = seedOneGradeShortOfFullMastery();
 
-      await test.step('arrange: open the app with nothing mastered', async () => {
+      await test.step('arrange: open a deck one Easy grade short of full mastery', async () => {
+        await seedProgress(page, {
+          ...CURRENT_PROGRESS_METADATA,
+          completedChapterIds: [],
+          quizAttempts: [],
+          cardStates,
+        });
         await app.goto();
+
         await expect(flashcards.mastery).toContainText(
-          `0 / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
+          `${CHAPTER_CARD_COUNT - 1} / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
+        );
+        // The open card is the unmastered one — the premise the single grade below rests on.
+        await expect(flashcards.level).toHaveAttribute(
+          'aria-label',
+          `${meta.flashcardsLevelLabel} ${ONE_GRADE_SHORT_BOX} / ${MAX_BOX}`,
         );
       });
 
-      await test.step(`act: grade Easy ${MASTERY_GRADE_BUDGET} times`, async () => {
-        for (let index = 0; index < MASTERY_GRADE_BUDGET; index += 1) {
-          await flashcards.reviewCard('easy');
-        }
+      await test.step('act: grade the last unmastered card Easy exactly once', async () => {
+        await flashcards.reviewCard('easy');
       });
 
       await test.step('assert: the whole deck reads as mastered', async () => {
