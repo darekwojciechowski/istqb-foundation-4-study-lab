@@ -1,86 +1,130 @@
-import { expect, test } from '@playwright/test';
 import { knowledgePack } from '../src/knowledge/currentKnowledgePack';
 import { MAX_BOX } from '../src/lib/srs';
-import { clearProgress } from './helpers';
+import { expect, test } from './fixtures/test';
+import { REQ } from './requirements';
 
 const { meta } = knowledgePack;
 
-test.beforeEach(async ({ page }) => {
-  await clearProgress(page);
-});
+const FIRST_CHAPTER_ID = knowledgePack.syllabusChapters[0].id;
+
+/** Cards in the default chapter's deck — the denominator of the mastery read-out. */
+const CHAPTER_CARD_COUNT = knowledgePack.flashcards.filter(
+  (flashcard) => flashcard.chapterId === FIRST_CHAPTER_ID,
+).length;
+
+/**
+ * Grade budget for mastering the whole deck. Card selection is deterministic but
+ * box-weighted and lag-limited, so a card can resurface before every other card has
+ * been seen; two Easy grades per card is the floor, and this leaves generous headroom.
+ * Overshooting is harmless — grading an already-mastered card leaves it at MAX_BOX.
+ */
+const MASTERY_GRADE_BUDGET = CHAPTER_CARD_COUNT * 5;
 
 test.describe('flashcards SRS', () => {
-  test('learner can reveal a card, grade it, and advance to the next card', async ({ page }) => {
-    await page.goto('/');
+  test(
+    'learner can reveal a card, grade it, and advance to the next card',
+    {
+      tag: ['@smoke'],
+      annotation: [{ type: 'requirement', description: REQ.FLASHCARD_REVIEW }],
+    },
+    async ({ app, flashcards }) => {
+      await test.step('arrange: open the app on an unstarted deck', async () => {
+        await app.goto();
+        await expect(flashcards.prompt).toBeVisible();
+        await expect(flashcards.level).toHaveAttribute(
+          'aria-label',
+          `${meta.flashcardsLevelLabel} 0 / ${MAX_BOX}`,
+        );
+        await expect(flashcards.mastery).toContainText(
+          `0 / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
+        );
+      });
 
-    await expect(page.getByTestId('flashcard-prompt')).toBeVisible();
-    await expect(page.getByTestId('flashcard-level')).toHaveAttribute(
-      'aria-label',
-      `${meta.flashcardsLevelLabel} 0 / ${MAX_BOX}`,
-    );
+      await test.step('act: reveal the answer and grade the card Good', async () => {
+        await flashcards.showAnswer();
+        await expect(flashcards.answer).toBeVisible();
+        await expect(flashcards.gradeGroup).toBeVisible();
+        await flashcards.grade('good');
+      });
 
-    await page.getByRole('button', { name: meta.flashcardsShowAnswerLabel }).click();
-    await expect(page.getByTestId('flashcard-answer')).toBeVisible();
-    await expect(page.getByRole('group', { name: 'Rate your recall' })).toBeVisible();
+      await test.step('assert: the deck advances to the next unrevealed card', async () => {
+        await expect(flashcards.answer).toBeHidden();
+        await expect(flashcards.showAnswerButton).toBeVisible();
+        await expect(app.announcer).toHaveText('Card rated. Showing the next card.');
+      });
+    },
+  );
 
-    await page.getByRole('button', { name: meta.flashcardsGoodLabel, exact: true }).click();
+  test(
+    'grading every card as Easy masters the whole chapter and persists across reload',
+    {
+      tag: ['@slow'],
+      annotation: [{ type: 'requirement', description: REQ.FLASHCARD_MASTERY }],
+    },
+    async ({ app, flashcards }) => {
+      // Mastering a full chapter takes dozens of reveal/grade round-trips, which is
+      // legitimately slow on CI WebKit; triple the default timeout rather than flake.
+      test.slow();
 
-    await expect(page.getByTestId('flashcard-answer')).toBeHidden();
-    await expect(page.getByRole('button', { name: meta.flashcardsShowAnswerLabel })).toBeVisible();
-    await expect(page.getByTestId('live-announcer')).toHaveText('Card rated. Showing the next card.');
-  });
+      await test.step('arrange: open the app with nothing mastered', async () => {
+        await app.goto();
+        await expect(flashcards.mastery).toContainText(
+          `0 / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
+        );
+      });
 
-  test('grading every card as Easy masters the whole chapter and persists across reload', async ({ page }) => {
-    // Mastering a full chapter takes dozens of reveal/grade round-trips, which is
-    // legitimately slow on CI WebKit; triple the default timeout rather than flake.
-    test.slow();
-    await page.goto('/');
+      await test.step(`act: grade Easy ${MASTERY_GRADE_BUDGET} times`, async () => {
+        for (let index = 0; index < MASTERY_GRADE_BUDGET; index += 1) {
+          await flashcards.reviewCard('easy');
+        }
+      });
 
-    const mastery = page.getByTestId('flashcard-mastery');
-    const total = Number(/\d+\s*\/\s*(\d+)/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
-    expect(total).toBeGreaterThan(0);
+      await test.step('assert: the whole deck reads as mastered', async () => {
+        await expect(flashcards.mastery).toContainText(
+          `${CHAPTER_CARD_COUNT} / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
+        );
+      });
 
-    const showAnswer = page.getByRole('button', { name: meta.flashcardsShowAnswerLabel });
-    const gradeEasy = page.getByRole('button', { name: meta.flashcardsEasyLabel, exact: true });
-
-    // Each Easy grade moves a card +2 boxes (0->2->4=mastered), so two passes per
-    // card suffice; the extra headroom absorbs the weighted/lagged card selection.
-    let mastered = 0;
-    for (let i = 0; i < total * 10 && mastered < total; i += 1) {
-      await showAnswer.click();
-      await gradeEasy.click();
-      // Reading the counter every grade dominates runtime on WebKit; sample it once
-      // per chapter-sized batch instead, while still breaking out as soon as we hit total.
-      if (i % total === total - 1) {
-        mastered = Number(/(\d+)\s*\/\s*\d+/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
-      }
-    }
-
-    mastered = Number(/(\d+)\s*\/\s*\d+/.exec((await mastery.textContent()) ?? '')?.[1] ?? 0);
-    expect(mastered).toBe(total);
-    await expect(mastery).toContainText(`${total} / ${total} ${meta.flashcardsMasteryLabel}`);
-
-    await page.reload();
-    await expect(page.getByTestId('flashcard-mastery')).toContainText(`${total} / ${total} ${meta.flashcardsMasteryLabel}`);
-  });
+      await test.step('assert: mastery survives a reload', async () => {
+        await app.reload();
+        await expect(flashcards.mastery).toContainText(
+          `${CHAPTER_CARD_COUNT} / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
+        );
+      });
+    },
+  );
 });
 
 test.describe('scenario drills', () => {
-  test('learner can read a scenario with its coaching hint and shuffle to a different one', async ({ page }) => {
-    await page.goto('/');
+  test(
+    'learner can read a scenario with its coaching hint and shuffle to a different one',
+    {
+      tag: ['@smoke'],
+      annotation: [{ type: 'requirement', description: REQ.SCENARIO_SHUFFLE }],
+    },
+    async ({ app, page }) => {
+      const scenarioPrompt = page.getByLabel('Scenario drill prompt');
+      let promptBeforeShuffle: string | null = null;
 
-    const scenarioPrompt = page.getByLabel('Scenario drill prompt');
-    await expect(scenarioPrompt).toBeVisible();
-    await expect(page.getByText(meta.scenarioCoachingHintLabel)).toBeVisible();
+      await test.step('arrange: read the current scenario and its hint', async () => {
+        await app.goto();
+        await expect(scenarioPrompt).toBeVisible();
+        await expect(page.getByText(meta.scenarioCoachingHintLabel)).toBeVisible();
 
-    const promptBeforeShuffle = await scenarioPrompt.textContent();
-    expect(promptBeforeShuffle).not.toBeNull();
+        promptBeforeShuffle = await scenarioPrompt.textContent();
+        expect(promptBeforeShuffle).not.toBeNull();
+      });
 
-    await page.getByRole('button', { name: meta.scenarioShuffleLabel }).click();
+      await test.step('act: shuffle the scenario', async () => {
+        await page.getByRole('button', { name: meta.scenarioShuffleLabel }).click();
+      });
 
-    await expect(page.getByTestId('live-announcer')).toHaveText('Scenario updated.');
-    await expect(scenarioPrompt).toBeVisible();
-    // The default (first) chapter ships multiple scenarios, so shuffle must change the prompt.
-    await expect(scenarioPrompt).not.toHaveText(promptBeforeShuffle as string);
-  });
+      await test.step('assert: a different scenario is announced and rendered', async () => {
+        await expect(app.announcer).toHaveText('Scenario updated.');
+        await expect(scenarioPrompt).toBeVisible();
+        // The default (first) chapter ships multiple scenarios, so shuffle must change the prompt.
+        await expect(scenarioPrompt).not.toHaveText(promptBeforeShuffle as string);
+      });
+    },
+  );
 });

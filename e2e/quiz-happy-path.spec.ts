@@ -1,42 +1,66 @@
-import { expect, test } from '@playwright/test';
 import { knowledgePack } from '../src/knowledge/currentKnowledgePack';
-import { PRACTICE_TOTAL, answerFirstChapterAndSubmit, clearProgress, expandAttemptsPanel } from './helpers';
+import { expect, test } from './fixtures/test';
+import { PRACTICE_TOTAL } from './pages/QuizPanelPage';
+import { REQ } from './requirements';
 
 const { meta } = knowledgePack;
 
-test.beforeEach(async ({ page }) => {
-  await clearProgress(page);
-});
-
 test.describe('practice quiz', () => {
-  test('answering every question correctly yields a perfect score, the pass message, and a recorded attempt', async ({
-    page,
-  }) => {
-    await page.goto('/');
+  test(
+    'answering every question correctly yields a perfect score, the pass message, and a recorded attempt',
+    {
+      tag: ['@smoke', '@critical'],
+      annotation: [
+        { type: 'requirement', description: REQ.PRACTICE_SCORING },
+        { type: 'requirement', description: REQ.ATTEMPT_HISTORY },
+      ],
+    },
+    async ({ app, quiz, studyPath }) => {
+      await test.step('arrange: open the app on the first chapter', async () => {
+        await app.goto();
+        await expect(app.heading).toBeVisible();
+        await studyPath.selectChapter(0);
+      });
 
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await test.step('act: answer every question correctly and submit', async () => {
+        await quiz.answerAll({ correct: true });
+        await quiz.submit();
+      });
 
-    await answerFirstChapterAndSubmit(page, true);
+      await test.step('assert: a perfect score, the pass message, and one recorded attempt', async () => {
+        await expect(quiz.result).toBeVisible();
+        await expect(quiz.result).toContainText(`Score: ${PRACTICE_TOTAL}/${PRACTICE_TOTAL} (100%)`);
+        await expect(quiz.result).toContainText(meta.quizPassResultMessage);
 
-    const resultStatus = page.getByRole('status');
-    await expect(resultStatus).toBeVisible();
-    await expect(resultStatus).toContainText(`Score: ${PRACTICE_TOTAL}/${PRACTICE_TOTAL} (100%)`);
-    await expect(resultStatus).toContainText(meta.quizPassResultMessage);
+        await app.expandAttempts();
+        await expect(app.attemptItems).toHaveCount(1);
+        await expect(app.attemptItems.first()).toContainText(`practice - ${PRACTICE_TOTAL}/${PRACTICE_TOTAL}`);
+      });
+    },
+  );
 
-    await expandAttemptsPanel(page);
-    const attemptsList = page.getByTestId('attempt-list');
-    await expect(attemptsList).toBeVisible();
-    await expect(attemptsList.locator('li')).toHaveCount(1);
-  });
+  test(
+    'answering every question incorrectly yields a zero score and the fail message',
+    {
+      tag: ['@critical'],
+      annotation: [{ type: 'requirement', description: REQ.PRACTICE_SCORING }],
+    },
+    async ({ app, quiz, studyPath }) => {
+      await test.step('arrange: open the app on the first chapter', async () => {
+        await app.goto();
+        await studyPath.selectChapter(0);
+      });
 
-  test('answering every question incorrectly yields a zero score and the fail message', async ({ page }) => {
-    await page.goto('/');
+      await test.step('act: answer every question incorrectly and submit', async () => {
+        await quiz.answerAll({ correct: false });
+        await quiz.submit();
+      });
 
-    await answerFirstChapterAndSubmit(page, false);
-
-    const resultStatus = page.getByRole('status');
-    await expect(resultStatus).toBeVisible();
-    await expect(resultStatus).toContainText(`Score: 0/${PRACTICE_TOTAL} (0%)`);
-    await expect(resultStatus).toContainText(meta.quizFailResultMessage);
-  });
+      await test.step('assert: a zero score and the fail message', async () => {
+        await expect(quiz.result).toBeVisible();
+        await expect(quiz.result).toContainText(`Score: 0/${PRACTICE_TOTAL} (0%)`);
+        await expect(quiz.result).toContainText(meta.quizFailResultMessage);
+      });
+    },
+  );
 });
