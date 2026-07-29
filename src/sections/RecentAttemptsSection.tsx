@@ -17,7 +17,7 @@ export function RecentAttemptsSection({ attempts, copy }: RecentAttemptsSectionP
   }
 
   return (
-    <CollapsiblePanel eyebrow={copy.eyebrow} title={copy.title}>
+    <CollapsiblePanel eyebrow={copy.eyebrow} title={copy.title} testId="attempts-panel">
       <ol className="attempt-list" data-testid="attempt-list">
         {attempts.map((attempt) => (
           <li key={`${attempt.takenAt}-${attempt.mode}`}>

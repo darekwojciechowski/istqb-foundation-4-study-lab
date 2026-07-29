@@ -5,6 +5,8 @@ export interface CollapsiblePanelProps {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  /** Optional hook for tests that need to address this panel's `<details>` element. */
+  testId?: string;
 }
 
 export function CollapsiblePanel({
@@ -12,9 +14,10 @@ export function CollapsiblePanel({
   title,
   children,
   defaultOpen = false,
+  testId,
 }: CollapsiblePanelProps) {
   return (
-    <details className="panel collapsible-panel" open={defaultOpen}>
+    <details className="panel collapsible-panel" open={defaultOpen} data-testid={testId}>
       <summary className="collapsible-panel__summary">
         <div className="collapsible-panel__heading">
           <p className="eyebrow">{eyebrow}</p>

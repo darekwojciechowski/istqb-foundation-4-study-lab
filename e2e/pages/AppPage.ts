@@ -19,7 +19,7 @@ export class AppPage {
     this.announcer = page.getByTestId('live-announcer');
     this.skipLink = page.getByRole('link', { name: 'Skip to quiz' });
     this.attemptItems = page.getByTestId('attempt-list').locator('li');
-    this.attemptsPanel = page.locator('details:has([data-testid="attempt-list"])');
+    this.attemptsPanel = page.getByTestId('attempts-panel');
   }
 
   /**

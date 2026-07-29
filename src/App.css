@@ -539,6 +539,13 @@ h2 {
   opacity: 0.78;
 }
 
+/* On the accent-filled active card the muted opacity blends the text toward the
+   fill: 0.78 measures 4.35:1, under the project's AA floor. 0.88 keeps the
+   de-emphasis and clears it at 5.10:1. */
+.chapter-card.active small {
+  opacity: 0.88;
+}
+
 .chapter-card em {
   color: #6ee7b7;
   font-size: 0.8rem;

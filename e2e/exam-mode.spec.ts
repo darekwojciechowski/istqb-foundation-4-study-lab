@@ -40,37 +40,9 @@ test.describe('exam mode', () => {
     },
   );
 
-  test(
-    'an exam attempt survives a page reload via localStorage',
-    {
-      tag: ['@critical', '@slow'],
-      annotation: [{ type: 'requirement', description: REQ.PROGRESS_PERSISTENCE }],
-    },
-    async ({ app, quiz }) => {
-      let attemptTextBeforeReload: string | null = null;
-
-      await test.step('arrange: submit a full exam attempt', async () => {
-        await app.goto();
-        await quiz.switchToExam();
-        await quiz.answerAll({ correct: true });
-        await quiz.submit();
-
-        await expect(app.attemptItems).toHaveCount(1);
-        attemptTextBeforeReload = await app.attemptItems.first().textContent();
-        expect(attemptTextBeforeReload).not.toBeNull();
-      });
-
-      await test.step('act: reload the page', async () => {
-        await app.reload();
-      });
-
-      await test.step('assert: the same attempt is still listed', async () => {
-        await app.expandAttempts();
-        await expect(app.attemptItems).toHaveCount(1);
-        await expect(app.attemptItems.first()).toHaveText(attemptTextBeforeReload as string);
-      });
-    },
-  );
+  // Reload survival is deliberately covered once, in `progress-persistence.spec.ts`:
+  // persistence is mode-agnostic (one storage key), so an exam-flavoured copy of that
+  // journey costs 40 extra radio interactions to prove nothing new.
 
   test(
     'when the exam timer expires the quiz auto-submits and records the attempt',
