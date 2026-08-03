@@ -16,7 +16,7 @@ Replace the pack that the app loads by default:
 1. Author a new pack module (copy `demoKnowledgePack.ts` as a template, or build fresh `src/data/` modules and assemble them like `currentKnowledgePack.ts`).
 2. Point the app at it by editing the export in [`src/knowledge/currentKnowledgePack.ts`](src/knowledge/currentKnowledgePack.ts) (or pass your pack as the `pack` prop to `App`).
 
-The compiler enforces the contract: every `meta` field, `examFacts`, at least one `syllabusChapter`, and the `progress`/`quiz`/`passingRule` config must be present, or the build fails. Certification-only sections (`officialResources`, `officialSampleExams`, `officialSyllabusGuide`, `syllabusAccelerator`, `appliedTechniques`, `externalLearningResources`) are optional/may be empty — empty collections auto-hide their section.
+The compiler enforces the contract: every `meta` field, `examFacts`, at least one `syllabusChapter`, and the `progress`/`quiz`/`passingRule` config must be present, or the build fails. Certification-only sections (`officialResources`, `officialSampleExams`, `officialSyllabusGuide`, `syllabusAccelerator`, `appliedTechniques`) are optional/may be empty — empty collections auto-hide their section.
 
 ## 2. One-time repo-branding checklist (not code)
 

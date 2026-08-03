@@ -150,7 +150,7 @@ describe('study content integrity', () => {
     });
   });
 
-  it('keeps question and resource contracts valid for the active pack', () => {
+  it('keeps question and exam contracts valid for the active pack', () => {
     const supportedDifficulties = new Set(knowledgePack.quiz.supportedDifficulties);
 
     knowledgePack.questions.forEach((question) => {
@@ -178,12 +178,6 @@ describe('study content integrity', () => {
         expect(stat.value).toBeGreaterThanOrEqual(0);
       });
     }
-
-    knowledgePack.externalLearningResources.forEach((resource) => {
-      expect(resource.title.trim().length).toBeGreaterThan(5);
-      expect(resource.url).toMatch(/^https:\/\//);
-      expect(resource.contentUse.trim().length).toBeGreaterThan(5);
-    });
 
     const serializedContent = JSON.stringify({
       flashcards: knowledgePack.flashcards,

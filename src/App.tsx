@@ -7,7 +7,6 @@ import { knowledgePack } from './knowledge/currentKnowledgePack';
 import type { KnowledgePack } from './knowledge/types';
 import { AppliedTechniquesReferenceSection } from './sections/AppliedTechniquesReferenceSection';
 import { ChapterOverviewSection } from './sections/ChapterOverviewSection';
-import { ExternalLearningResourcesSection } from './sections/ExternalLearningResourcesSection';
 import { HeroSection } from './sections/HeroSection';
 import { LegalFooter } from './sections/LegalFooter';
 import { OfficialReferencesSection } from './sections/OfficialReferencesSection';
@@ -203,16 +202,6 @@ export default function App({ pack = knowledgePack }: { pack?: KnowledgePack } =
             eyebrow: meta.officialSampleExamsEyebrow,
             title: meta.officialSampleExamsTitle,
             description: meta.officialSampleExamsDescription,
-          }}
-        />
-      ) : null}
-      {pack.externalLearningResources.length > 0 ? (
-        <ExternalLearningResourcesSection
-          externalLearningResources={pack.externalLearningResources}
-          copy={{
-            eyebrow: meta.externalResourcesEyebrow,
-            title: meta.externalResourcesTitle,
-            intro: meta.externalResourcesIntro,
           }}
         />
       ) : null}

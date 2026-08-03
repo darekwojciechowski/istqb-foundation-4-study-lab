@@ -571,7 +571,6 @@ h2 {
 .question-list,
 .review-list,
 .sample-exam-grid,
-.resource-card-grid,
 .syllabus-sprint-grid {
   display: grid;
   gap: 1rem;
@@ -582,7 +581,6 @@ h2 {
 }
 
 .sample-exam-grid,
-.resource-card-grid,
 .syllabus-sprint-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
 }
@@ -637,7 +635,6 @@ h2 {
 details,
 .hint,
 .sample-exam-card,
-.resource-card,
 .syllabus-sprint-card {
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
@@ -651,8 +648,6 @@ p + .hint {
 
 .sample-exam-card h3,
 .sample-exam-card p,
-.resource-card h3,
-.resource-card p,
 .syllabus-sprint-card h3,
 .syllabus-sprint-card p {
   margin-bottom: 0.4rem;
@@ -662,35 +657,6 @@ p + .hint {
   display: grid;
   gap: 0.35rem;
   margin: 0.75rem 0;
-}
-
-.resource-card-heading {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.7rem;
-}
-
-.resource-card-heading span,
-.resource-card-heading em {
-  background: rgba(77, 140, 255, 0.14);
-  border-radius: 999px;
-  color: var(--color-accent-text);
-  font-size: 0.75rem;
-  font-style: normal;
-  font-weight: 800;
-  padding: 0.3rem 0.55rem;
-}
-
-.resource-card-heading em {
-  background: rgba(31, 157, 107, 0.18);
-  color: #6ee7b7;
-}
-
-.creator {
-  color: var(--color-text-secondary);
-  font-weight: 800;
 }
 
 .syllabus-stats {

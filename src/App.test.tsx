@@ -74,20 +74,6 @@ describe('App', () => {
       );
     });
 
-    it('renders curated external learning resources', () => {
-      render(<App />);
-
-      expect(screen.getByRole('heading', { name: /Curated external learning resources/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /ASTQB Foundation Level resources/i })).toHaveAttribute(
-        'href',
-        expect.stringContaining('astqb.org'),
-      );
-      expect(screen.getByRole('link', { name: /TM SQUARE ISTQB Foundation 4.0 tutorials/i })).toHaveAttribute(
-        'href',
-        expect.stringContaining('youtube.com'),
-      );
-    });
-
     it('renders the syllabus accelerator section', () => {
       render(<App />);
 

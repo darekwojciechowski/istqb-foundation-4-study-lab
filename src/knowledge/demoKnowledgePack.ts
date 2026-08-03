@@ -61,10 +61,6 @@ export const demoKnowledgePack: KnowledgePack = {
     officialSyllabusTitle: 'Study accelerator',
     syllabusSprintDrillLabel: 'Drill',
     syllabusSprintPayoffLabel: 'Why it matters',
-    externalResourcesEyebrow: 'Extra study material',
-    externalResourcesTitle: 'Curated external learning resources',
-    externalResourcesIntro:
-      'Atlases, map quizzes, and communities with extra explanations and ready-made practice at the original source.',
     recentAttemptsEyebrow: 'Recent attempts',
     recentAttemptsTitle: 'Your local progress',
     chapterLearningGoalsLabel: 'Learning goals',
@@ -167,7 +163,6 @@ export const demoKnowledgePack: KnowledgePack = {
   officialSampleExams: [],
   syllabusAccelerator: [],
   appliedTechniques: [],
-  externalLearningResources: [],
   progress: {
     storageKey: 'world-capitals-progress',
     packId: 'world-capitals',

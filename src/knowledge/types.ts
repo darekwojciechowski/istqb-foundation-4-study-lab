@@ -1,4 +1,3 @@
-import type { ExternalLearningResource } from '../data/externalResources';
 import type { Flashcard, ScenarioPrompt } from '../data/flashcards';
 import type { AppliedTechnique, OfficialResource, OfficialSampleExam, OfficialSyllabusGuide, SyllabusChapter, SyllabusSprint } from '../data/syllabus';
 import type { PracticeQuestion, QuestionDifficulty } from '../lib/quiz';
@@ -95,12 +94,6 @@ export interface OfficialSyllabusCopy {
   readonly syllabusSprintPayoffLabel: string;
 }
 
-export interface ExternalResourcesCopy {
-  readonly externalResourcesEyebrow: string;
-  readonly externalResourcesTitle: string;
-  readonly externalResourcesIntro: string;
-}
-
 export interface RecentAttemptsCopy {
   readonly recentAttemptsEyebrow: string;
   readonly recentAttemptsTitle: string;
@@ -123,7 +116,6 @@ export type KnowledgePackMeta =
   OfficialReferencesCopy &
   OfficialSampleExamsCopy &
   OfficialSyllabusCopy &
-  ExternalResourcesCopy &
   RecentAttemptsCopy &
   LegalCopy;
 
@@ -167,7 +159,6 @@ export interface KnowledgePack {
   readonly officialSyllabusGuide?: DeepReadonly<OfficialSyllabusGuide>;
   readonly syllabusAccelerator: DeepReadonly<ReadonlyArray<SyllabusSprint>>;
   readonly appliedTechniques: DeepReadonly<ReadonlyArray<AppliedTechnique>>;
-  readonly externalLearningResources: DeepReadonly<ReadonlyArray<ExternalLearningResource>>;
   readonly progress: DeepReadonly<KnowledgePackProgressConfig>;
   readonly passingRule: DeepReadonly<KnowledgePackPassingRule>;
   readonly quiz: DeepReadonly<{

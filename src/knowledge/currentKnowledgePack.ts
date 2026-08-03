@@ -1,4 +1,3 @@
-import { externalLearningResources } from '../data/externalResources';
 import { flashcards, scenarios } from '../data/flashcards';
 import { questions } from '../data/questions';
 import {
@@ -76,10 +75,6 @@ export const knowledgePack: KnowledgePack = {
     officialSyllabusTitle: 'Official syllabus accelerator',
     syllabusSprintDrillLabel: 'Drill',
     syllabusSprintPayoffLabel: 'Why it matters',
-    externalResourcesEyebrow: 'Extra study material',
-    externalResourcesTitle: 'Curated external learning resources',
-    externalResourcesIntro:
-      'Blogs, practice sites, communities, and YouTube channels with extra explanations and ready-made practice at the original source.',
     recentAttemptsEyebrow: 'Recent attempts',
     recentAttemptsTitle: 'Your local progress',
     chapterLearningGoalsLabel: 'Learning goals',
@@ -98,7 +93,6 @@ export const knowledgePack: KnowledgePack = {
   officialSyllabusGuide,
   syllabusAccelerator,
   appliedTechniques,
-  externalLearningResources,
   progress: {
     storageKey: 'istqb-foundation-4-progress',
     packId: 'istqb-foundation-4',

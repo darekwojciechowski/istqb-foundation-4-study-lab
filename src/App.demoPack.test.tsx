@@ -59,8 +59,5 @@ describe('App with a swapped knowledge pack', () => {
 
     expect(screen.queryByRole('heading', { name: /Official sample exams/i })).toBeNull();
     expect(screen.queryByRole('heading', { name: /Official syllabus accelerator/i })).toBeNull();
-    expect(
-      screen.queryByRole('heading', { name: /Curated external learning resources/i }),
-    ).toBeNull();
   });
 });
