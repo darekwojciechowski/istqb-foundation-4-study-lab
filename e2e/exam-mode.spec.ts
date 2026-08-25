@@ -9,7 +9,7 @@ test.describe('exam mode', () => {
   test.slow();
 
   test(
-    'learner can switch to exam mode, see the countdown timer, answer all questions, and see the attempt recorded',
+    'an exam run shows the countdown, accepts every answer, and records the attempt',
     {
       tag: ['@critical', '@slow'],
       annotation: [

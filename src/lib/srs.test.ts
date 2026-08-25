@@ -68,7 +68,7 @@ describe('selectNextCardId', () => {
     expect(next).not.toBe('a');
   });
 
-  it('favours lower boxes over mastered cards', () => {
+  it('favors lower boxes over mastered cards', () => {
     // Three mastered cards plus one unmastered: across many seeds the unmastered
     // card should be selected far more often than any single mastered card.
     const cardIds = ['m1', 'm2', 'm3', 'weak'];

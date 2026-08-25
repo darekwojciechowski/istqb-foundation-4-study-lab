@@ -12,7 +12,7 @@ const ONE_CHAPTER_PERCENTAGE = Math.round((1 / knowledgePack.syllabusChapters.le
 
 test.describe('chapter progress', () => {
   test(
-    'marking a chapter reviewed raises completion %, flags the card Completed, and persists',
+    'marking a chapter reviewed raises the completion percentage, flags the card Completed, and persists',
     {
       tag: ['@smoke', '@critical'],
       annotation: [{ type: 'requirement', description: REQ.CHAPTER_PROGRESS }],
