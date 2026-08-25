@@ -1,7 +1,12 @@
 name: Deploy to GitHub Pages
 
+# Deploy follows CI rather than racing it. Triggering on `push` meant a red CI run and a
+# green deploy could coexist for the same commit, and that the artifact users received was
+# rebuilt from scratch rather than being the thing CI had just verified.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -16,9 +21,18 @@ concurrency:
 
 jobs:
   build:
+    # A completed CI run is not a successful one — `completed` fires on failure and
+    # cancellation too. Manual dispatch bypasses the check by design.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      # Pin the exact commit CI tested. `main` may already have moved on, in which case
+      # the branch tip is a commit nothing has verified.
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
       - uses: actions/setup-node@v5
         with:
           node-version: 26
