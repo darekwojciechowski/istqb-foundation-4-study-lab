@@ -35,7 +35,9 @@ export function StudyPathSection({
             type="button"
             className={chapter.id === activeChapterId ? 'chapter-card active' : 'chapter-card'}
             data-testid="chapter-card"
-            aria-current={chapter.id === activeChapterId ? 'true' : undefined}
+            // "page" rather than "true": inside a nav, it is the *page-level* current
+            // item, and that is the token screen readers announce as "current page".
+            aria-current={chapter.id === activeChapterId ? 'page' : undefined}
             key={chapter.id}
             onClick={() => onSelectChapter(chapter.id)}
           >

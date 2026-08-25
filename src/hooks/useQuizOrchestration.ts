@@ -9,6 +9,7 @@ import { playExamEnd, playExamStart } from '../lib/examAudio';
 import { recordCardGrade, recordQuizResult, toggleChapterComplete, type LearnerProgress } from '../lib/progress';
 import { createQuizSeed, shuffleBySeed, type ChapterId } from '../lib/quiz';
 import type { CardGrade } from '../lib/srs';
+import { useAnnouncer } from './useAnnouncer';
 import { useProgressSync } from './useProgressSync';
 
 const EXAM_WARNING_MILESTONES_MS = [5 * 60_000, 60_000];
@@ -54,7 +55,7 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
   const [activeChapterId, setActiveChapterId] = useState<ChapterId>(syllabusChapters[0]?.id ?? '');
   const [scenarioSeed, setScenarioSeed] = useState(initialSeed);
   const [previousScenarioId, setPreviousScenarioId] = useState<string>();
-  const [announcement, setAnnouncement] = useState('');
+  const { announcement, announce } = useAnnouncer();
   const [examTimedOut, setExamTimedOut] = useState(false);
   const [progress, setProgress] = useProgressSync(pack);
 
@@ -72,7 +73,7 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
 
   function gradeFlashcard(cardId: string, grade: CardGrade) {
     setProgress((currentProgress) => recordCardGrade(currentProgress, cardId, grade));
-    setAnnouncement('Card rated. Showing the next card.');
+    announce('Card rated. Showing the next card.');
   }
 
   const flashcardReview = useFlashcardReview({
@@ -121,7 +122,7 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
 
   function handleExamExpire() {
     setExamTimedOut(true);
-    setAnnouncement('Time is up. Your exam has been submitted.');
+    announce('Time is up. Your exam has been submitted.');
     submitQuiz();
   }
 
@@ -132,7 +133,7 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
     onExpire: handleExamExpire,
     milestoneMs: EXAM_WARNING_MILESTONES_MS,
     onMilestone: (ms) =>
-      setAnnouncement(`${ms === 60_000 ? '1 minute' : '5 minutes'} remaining in your exam.`),
+      announce(`${ms === 60_000 ? '1 minute' : '5 minutes'} remaining in your exam.`),
   });
 
   function resetQuiz(
@@ -147,11 +148,11 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
     }
 
     if (nextMode !== quiz.quizMode) {
-      setAnnouncement(`Switched to ${nextMode} mode.`);
+      announce(`Switched to ${nextMode} mode.`);
     } else if (nextChapterId !== activeChapterId) {
       const nextChapterTitle = syllabusChapters.find((chapter) => chapter.id === nextChapterId)?.title;
       if (nextChapterTitle) {
-        setAnnouncement(`Now practicing: ${nextChapterTitle}.`);
+        announce(`Now practicing: ${nextChapterTitle}.`);
       }
     }
 
@@ -179,7 +180,7 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
   function randomizeScenario() {
     setPreviousScenarioId(chapterScenario?.id);
     setScenarioSeed(createQuizSeed());
-    setAnnouncement('Scenario updated.');
+    announce('Scenario updated.');
   }
 
   return {

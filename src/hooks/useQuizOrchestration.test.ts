@@ -3,12 +3,20 @@ import { act, renderHook } from '@testing-library/react';
 import { demoKnowledgePack } from '../knowledge/demoKnowledgePack';
 import { useQuizOrchestration } from './useQuizOrchestration';
 
+/**
+ * Drops the zero-width marker `useAnnouncer` alternates so a repeated announcement still
+ * changes the live region's text node. It carries no meaning for these assertions.
+ */
+function spokenText(announcement: string): string {
+  return announcement.replace(/\u200B/g, '');
+}
+
 describe('useQuizOrchestration', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('initialises with the first chapter active and exam not in progress', () => {
+  it('starts on the first chapter with no exam running', () => {
     const { result } = renderHook(() => useQuizOrchestration({ pack: demoKnowledgePack }));
 
     expect(result.current.activeChapterId).toBe(demoKnowledgePack.syllabusChapters[0].id);
@@ -16,7 +24,7 @@ describe('useQuizOrchestration', () => {
     expect(result.current.completionPercentage).toBe(0);
   });
 
-  it('transitions quiz mode to exam when resetQuiz is called with "exam"', () => {
+  it('switches to exam mode when an exam is started', () => {
     const { result } = renderHook(() => useQuizOrchestration({ pack: demoKnowledgePack }));
 
     act(() => {
@@ -27,7 +35,7 @@ describe('useQuizOrchestration', () => {
     expect(result.current.examInProgress).toBe(true);
   });
 
-  it('submitQuiz marks the quiz as submitted and records the attempt in progress', () => {
+  it('records an attempt in progress when a quiz is submitted', () => {
     const { result } = renderHook(() => useQuizOrchestration({ pack: demoKnowledgePack }));
 
     act(() => {
@@ -53,7 +61,7 @@ describe('useQuizOrchestration', () => {
     expect(result.current.progress.quizAttempts[0]?.total).toBe(result.current.quiz.quizQuestions.length);
   });
 
-  it('toggleChapterReview updates completionPercentage and toggles back to 0', () => {
+  it('raises and lowers completion as a chapter is reviewed and unreviewed', () => {
     const { result } = renderHook(() => useQuizOrchestration({ pack: demoKnowledgePack }));
 
     act(() => {
@@ -69,7 +77,7 @@ describe('useQuizOrchestration', () => {
     expect(result.current.completionPercentage).toBe(0);
   });
 
-  it('chapter switch without draft answers skips the confirm dialog', () => {
+  it('switches chapter without confirmation when no answers are drafted', () => {
     const confirmSpy = vi.spyOn(window, 'confirm');
     const secondChapterId = demoKnowledgePack.syllabusChapters[1].id;
 
@@ -83,7 +91,7 @@ describe('useQuizOrchestration', () => {
     expect(result.current.activeChapterId).toBe(secondChapterId);
   });
 
-  it('chapter switch with draft answers triggers confirm; blocks on false, proceeds on true', () => {
+  it('keeps draft answers when a chapter change is cancelled and discards them when confirmed', () => {
     const secondChapterId = demoKnowledgePack.syllabusChapters[1].id;
     const firstChapterId = demoKnowledgePack.syllabusChapters[0].id;
 
@@ -136,10 +144,46 @@ describe('useQuizOrchestration', () => {
       });
 
       expect(result.current.examTimedOut).toBe(true);
-      expect(result.current.announcement).toBe('Time is up. Your exam has been submitted.');
+      expect(spokenText(result.current.announcement)).toBe('Time is up. Your exam has been submitted.');
       expect(result.current.quiz.isSubmitted).toBe(true);
       expect(result.current.progress.quizAttempts).toHaveLength(1);
       expect(result.current.progress.quizAttempts[0]?.mode).toBe('exam');
+    });
+
+    /**
+     * `handleExamExpire` reads `quiz.score` out of its render closure, and stays correct
+     * only because `useExamTimer` re-points its `onExpire` ref every render — the
+     * countdown's interval effect deliberately excludes `onExpire` from its dependencies
+     * so the clock never restarts.
+     *
+     * The case above answers nothing, so a stale closure that still reported `exam` and
+     * `0` correct would pass it. Answering a known number first is what pins the payload.
+     */
+    it('records the answers given up to the moment the exam expires', () => {
+      const { result } = renderHook(() => useQuizOrchestration({ pack: demoKnowledgePack }));
+
+      act(() => {
+        result.current.resetQuiz('exam');
+      });
+
+      const answeredCorrectly = 3;
+      const examQuestions = result.current.quiz.quizQuestions;
+      expect(examQuestions.length).toBeGreaterThan(answeredCorrectly);
+
+      act(() => {
+        examQuestions.slice(0, answeredCorrectly).forEach((question) => {
+          result.current.quiz.updateAnswer(question.id, question.correctOptionIndex);
+        });
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(demoKnowledgePack.examFacts.durationMinutes * 60_000 + 1_000);
+      });
+
+      const recordedAttempt = result.current.progress.quizAttempts[0];
+      expect(recordedAttempt?.mode).toBe('exam');
+      expect(recordedAttempt?.correct).toBe(answeredCorrectly);
+      expect(recordedAttempt?.total).toBe(examQuestions.length);
     });
   });
 
@@ -166,12 +210,12 @@ describe('useQuizOrchestration', () => {
 
       expect(result.current.flashcardReview.isRevealed).toBe(false);
       expect(Object.keys(result.current.progress.cardStates).length).toBeGreaterThan(0);
-      expect(result.current.announcement).toBe('Card rated. Showing the next card.');
+      expect(spokenText(result.current.announcement)).toBe('Card rated. Showing the next card.');
     });
   });
 
-  describe('randomizers', () => {
-    it('randomizeScenario updates the announcement without throwing', () => {
+  describe('scenario drill', () => {
+    it('announces a scenario change when the drill is reshuffled', () => {
       const { result } = renderHook(() => useQuizOrchestration({ pack: demoKnowledgePack }));
 
       expect(() => {
@@ -180,7 +224,7 @@ describe('useQuizOrchestration', () => {
         });
       }).not.toThrow();
 
-      expect(result.current.announcement).toBe('Scenario updated.');
+      expect(spokenText(result.current.announcement)).toBe('Scenario updated.');
     });
   });
 });

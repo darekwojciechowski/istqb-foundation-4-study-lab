@@ -666,13 +666,24 @@ p + .hint {
   margin: var(--space-4) 0;
 }
 
-.syllabus-stats span {
+.syllabus-stat {
   background: rgba(77, 140, 255, 0.14);
   border-radius: 999px;
   color: var(--color-accent-text);
+  display: flex;
+  /* The list reads term-then-value (learning objectives → 64) for assistive tech, which
+     is the correct pairing; the pill has always read value-first, so reverse the visual
+     order rather than reword it. */
+  flex-direction: row-reverse;
   font-size: 0.85rem;
   font-weight: 800;
+  gap: 0.3rem;
   padding: 0.45rem 0.75rem;
+}
+
+.syllabus-stat dt,
+.syllabus-stat dd {
+  margin: 0;
 }
 
 details summary {
