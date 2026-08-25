@@ -71,9 +71,47 @@ describe('useProgressSync', () => {
     expect(written.completedChapterIds).toEqual(['ch-2']);
   });
 
+  // A visitor who opens the page and leaves should not have an entry written for them:
+  // "no sign-in, nothing stored until you study" is part of what this app promises.
+  it('writes nothing on mount when storage is empty', () => {
+    const storage = inMemoryStorage();
+
+    renderHook(() => useProgressSync(makeFacade(), storage));
+
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.store.has('test-key')).toBe(false);
+  });
+
+  it('starts persisting as soon as progress actually changes', () => {
+    const storage = inMemoryStorage();
+    const { result } = renderHook(() => useProgressSync(makeFacade(), storage));
+
+    act(() => {
+      const [, setProgress] = result.current;
+      setProgress((current) => ({ ...current, completedChapterIds: ['ch-1'] }));
+    });
+
+    const written = JSON.parse(storage.store.get('test-key')!) as LearnerProgress;
+    expect(written.completedChapterIds).toEqual(['ch-1']);
+  });
+
+  // The counterpart to the skip above: an entry that already exists must still be
+  // rewritten in sanitized form on mount, which is how corrupted storage recovers.
+  it('rewrites an existing entry on mount so corrupted storage is repaired', () => {
+    const storage = inMemoryStorage({ 'test-key': '{ not json' });
+
+    renderHook(() => useProgressSync(makeFacade(), storage));
+
+    const written = JSON.parse(storage.store.get('test-key')!) as LearnerProgress;
+    expect(written.packId).toBe('test-pack');
+    expect(written.completedChapterIds).toEqual([]);
+    expect(written.quizAttempts).toEqual([]);
+  });
+
   it('swallows QuotaExceededError when persisting', () => {
     const storage = {
-      getItem: vi.fn(() => null),
+      // Non-empty storage, so the mount write this test is about actually happens.
+      getItem: vi.fn(() => '{}'),
       setItem: vi.fn(() => {
         const error = new Error('quota');
         (error as Error & { name: string }).name = 'QuotaExceededError';
@@ -87,7 +125,7 @@ describe('useProgressSync', () => {
 
   it('rethrows non-quota errors when persisting', () => {
     const storage = {
-      getItem: vi.fn(() => null),
+      getItem: vi.fn(() => '{}'),
       setItem: vi.fn(() => {
         throw new Error('disk on fire');
       }),

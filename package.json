@@ -13,8 +13,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "docs:traceability": "node scripts/generate-traceability.mjs"
+    "test:e2e:ui": "playwright test --ui"
   },
   "keywords": [
     "istqb",

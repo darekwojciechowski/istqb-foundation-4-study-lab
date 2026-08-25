@@ -7,20 +7,22 @@ import { REQ } from './requirements';
 /**
  * Automated WCAG scans of the three states a learner actually sits in.
  *
- * The AAA tag is included deliberately: this app went through a WCAG AAA audit
- * (`.agents/audits/2026-06-04-ui-ux-wcag-aaa-audit.md`), so the stricter ruleset is
- * a real target here rather than aspiration — with one rule since traded away by an
- * explicit design decision (see DISABLED_RULES). Automated scanning catches roughly
- * a third of WCAG issues: a green run is a floor, not a claim of conformance.
+ * The AAA tag is included deliberately: the whole AAA ruleset is a real target here
+ * rather than aspiration, with exactly one rule traded away by an explicit design
+ * decision (see DISABLED_RULES). Automated scanning catches roughly a third of WCAG
+ * issues: a green run is a floor, not a claim of conformance.
  */
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag2aaa'];
 
 /**
- * `color-contrast-enhanced` is the AAA (7:1) contrast rule. It is disabled by a
- * recorded design decision, not because it is inconvenient: the "Design refresh
- * (mesh hero + AA accent punch-up)" work in PROGRESS.md deliberately relaxed the
- * contrast target from AAA to AA (>=4.5:1) to unlock the electric-blue accent
- * palette. The rest of the AAA ruleset stays switched on.
+ * `color-contrast-enhanced` is the AAA (7:1) contrast rule, and it is off by decision
+ * rather than by convenience.
+ *
+ * The decision: the design refresh traded the AAA 7:1 contrast target for AA
+ * (>=4.5:1) in order to use the electric-blue accent palette, which cannot reach 7:1
+ * against this app's dark surfaces without desaturating into grey. Every other AAA
+ * rule stays switched on, so the relaxation is scoped to contrast alone rather than
+ * dropping the tier wholesale.
  */
 const DISABLED_RULES = ['color-contrast-enhanced'];
 
@@ -74,6 +76,27 @@ test.describe('accessibility', () => {
       await app.goto();
 
       await expectNoViolations(page);
+    },
+  );
+
+  test(
+    'the active chapter is marked as the current page for assistive tech',
+    {
+      tag: ['@critical'],
+      annotation: [{ type: 'requirement', description: REQ.ACCESSIBILITY_SCAN }],
+    },
+    async ({ app, studyPath }) => {
+      await app.goto();
+
+      // "page" is the token that is announced as "current page"; a bare "true" is valid
+      // ARIA but says only "current", which is what this navigation used to expose.
+      await expect(studyPath.chapterCard(0)).toHaveAttribute('aria-current', 'page');
+      await expect(studyPath.chapterCard(1)).not.toHaveAttribute('aria-current');
+
+      await studyPath.selectChapter(1);
+
+      await expect(studyPath.chapterCard(1)).toHaveAttribute('aria-current', 'page');
+      await expect(studyPath.chapterCard(0)).not.toHaveAttribute('aria-current');
     },
   );
 

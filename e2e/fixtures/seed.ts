@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { knowledgePack } from '../../src/knowledge/currentKnowledgePack';
 import type { LearnerProgress } from '../../src/lib/progress';
 
-const PROGRESS_STORAGE_KEY = knowledgePack.progress.storageKey;
+export const PROGRESS_STORAGE_KEY = knowledgePack.progress.storageKey;
 
 /**
  * Ordering note: the `clearedProgress` auto-fixture registers an init script that
@@ -27,7 +27,7 @@ export async function seedRawProgress(page: Page, value: string): Promise<void> 
     ([key, raw]) => {
       // Seed once, on the first navigation only. An init script runs on *every*
       // navigation, so without this sentinel a reload would restore the seeded payload
-      // over whatever the test just did — silently undoing the behaviour under test.
+      // over whatever the test just did — silently undoing the behavior under test.
       // (Same mechanism as the `clearedProgress` fixture, and deliberately a separate
       // sentinel so the two stay independent.)
       if (window.sessionStorage.getItem('__e2e_progress_seeded')) {

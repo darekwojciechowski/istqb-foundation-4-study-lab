@@ -45,14 +45,14 @@ describe('App', () => {
       expect(screen.getByText(knowledgePack.meta.examSimulatorDescription)).toBeInTheDocument();
     });
 
-    it('renders practice tool header actions in responsive header action slots', () => {
+    it('places practice tool actions in the panel heading accessory slot', () => {
       render(<App />);
 
       expect(screen.getByTestId('flashcard-mastery').closest('[data-testid="panel-heading-accessory"]')).not.toBeNull();
       expect(screen.getByRole('button', { name: /Shuffle scenario/i }).closest('[data-testid="panel-heading-accessory"]')).not.toBeNull();
     });
 
-    it('renders header actions in anchored responsive panel headings', () => {
+    it('keeps practice tool actions inside the panel heading itself', () => {
       render(<App />);
 
       expect(screen.getByTestId('flashcard-mastery').closest('[data-testid="panel-heading"]')).not.toBeNull();
@@ -77,11 +77,12 @@ describe('App', () => {
     it('renders the syllabus accelerator section', () => {
       render(<App />);
 
-      const syllabusFacts = screen.getByLabelText(/official syllabus facts/i);
+      const syllabusFacts = screen.getByTestId('syllabus-stats');
 
       expect(screen.getByRole('heading', { name: /Official syllabus accelerator/i })).toBeInTheDocument();
       expect(screen.getByText(knowledgePack.meta.officialSyllabusDescription)).toBeInTheDocument();
-      expect(syllabusFacts).toHaveTextContent(/64 learning objectives/i);
+      expect(syllabusFacts).toHaveTextContent(/learning objectives/i);
+      expect(syllabusFacts).toHaveTextContent(/64/);
       expect(screen.getByRole('link', { name: knowledgePack.meta.officialSyllabusLinkLabel })).toHaveAttribute(
         'href',
         expect.stringContaining('istqb.org'),
@@ -139,12 +140,12 @@ describe('App', () => {
       const firstChapter = screen.getByRole('button', { name: new RegExp(knowledgePack.syllabusChapters[0].title, 'i') });
       const secondChapter = screen.getByRole('button', { name: new RegExp(knowledgePack.syllabusChapters[1].title, 'i') });
 
-      expect(firstChapter).toHaveAttribute('aria-current', 'true');
+      expect(firstChapter).toHaveAttribute('aria-current', 'page');
       expect(secondChapter).not.toHaveAttribute('aria-current');
 
       fireEvent.click(secondChapter);
 
-      expect(secondChapter).toHaveAttribute('aria-current', 'true');
+      expect(secondChapter).toHaveAttribute('aria-current', 'page');
       expect(firstChapter).not.toHaveAttribute('aria-current');
 
       confirm.mockRestore();
@@ -176,6 +177,26 @@ describe('App', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /Shuffle scenario/i }));
       expect(announcer).toHaveTextContent(/Scenario updated/i);
+    });
+
+    // A live region only announces when its text node changes. Grading a second card
+    // produces the same sentence as the first, so an announcer that stores the message
+    // verbatim goes silent from here on — see useAnnouncer.
+    it('changes the live region text when the same message is announced twice', () => {
+      render(<App />);
+
+      const announcer = screen.getByTestId('live-announcer');
+
+      fireEvent.click(screen.getByRole('button', { name: /Show answer/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^Good$/i }));
+      const afterFirstGrade = announcer.textContent;
+
+      fireEvent.click(screen.getByRole('button', { name: /Show answer/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^Good$/i }));
+      const afterSecondGrade = announcer.textContent;
+
+      expect(afterFirstGrade).not.toBe(afterSecondGrade);
+      expect(announcer).toHaveTextContent(/Card rated\. Showing the next card\./);
     });
   });
 
@@ -353,7 +374,9 @@ describe('App', () => {
     it('shows the per-card mastery level starting at the lowest box', () => {
       render(<App />);
 
-      expect(screen.getByTestId('flashcard-level')).toHaveTextContent('0 / 4');
+      expect(screen.getByTestId('flashcard-level-status')).toHaveTextContent(
+        `${knowledgePack.meta.flashcardsLevelLabel} 0 / 4`,
+      );
     });
 
     it('shows mastery progress out of the chapter flashcard count', () => {
@@ -385,7 +408,7 @@ describe('App', () => {
       expect(screen.getByTestId('flashcard-mastery')).toHaveTextContent(`0 / ${chapterFlashcardCount} mastered`);
     });
 
-    it('reviews a flashcard that belongs to the active chapter', () => {
+    it('advances to a different card of the active chapter after grading', () => {
       render(<App />);
 
       const defaultChapterId = knowledgePack.syllabusChapters[0].id;
@@ -394,6 +417,10 @@ describe('App', () => {
           .filter((flashcard) => flashcard.chapterId === defaultChapterId)
           .map((flashcard) => flashcard.prompt),
       );
+      // Advancing is only meaningful with somewhere to advance to. Stated as an
+      // assertion rather than assumed, so a one-card chapter fails loudly here instead
+      // of quietly turning the test below into a tautology.
+      expect(chapterPromptSet.size).toBeGreaterThan(1);
 
       const currentPrompt = screen.getByTestId('flashcard-prompt').textContent ?? '';
       expect(chapterPromptSet.has(currentPrompt)).toBe(true);
@@ -403,6 +430,9 @@ describe('App', () => {
 
       const nextPrompt = screen.getByTestId('flashcard-prompt').textContent ?? '';
       expect(chapterPromptSet.has(nextPrompt)).toBe(true);
+      // Membership alone is satisfied by the card never changing, which a grade that
+      // does nothing would also pass.
+      expect(nextPrompt).not.toBe(currentPrompt);
     });
 
     it('reshuffles the scenario drill from the scenario panel button', () => {
@@ -414,19 +444,18 @@ describe('App', () => {
       const chapterScenarioCount = knowledgePack.scenarios.filter(
         (scenario) => scenario.chapterId === defaultChapterId,
       ).length;
+      // The pack ships several scenarios per chapter, so the single-scenario branch this
+      // test used to carry was dead code. Assert the premise instead of branching on it.
+      expect(chapterScenarioCount).toBeGreaterThan(1);
 
       render(<App />);
-      const initialScenario = screen.getByLabelText(/Scenario drill prompt/i).textContent;
+      const initialScenario = screen.getByTestId('scenario-prompt').textContent;
 
       fireEvent.click(screen.getByRole('button', { name: /Shuffle scenario/i }));
 
-      const shuffledScenario = screen.getByLabelText(/Scenario drill prompt/i).textContent;
+      const shuffledScenario = screen.getByTestId('scenario-prompt').textContent;
 
-      if (chapterScenarioCount > 1) {
-        expect(shuffledScenario).not.toBe(initialScenario);
-      } else {
-        expect(shuffledScenario).toBe(initialScenario);
-      }
+      expect(shuffledScenario).not.toBe(initialScenario);
 
       randomUUID.mockRestore();
     });

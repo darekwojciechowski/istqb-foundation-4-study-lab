@@ -37,7 +37,9 @@ export function HeroSection({ copy, examFacts, onStartPractice, onStartExam }: H
           );
         })()}
         <p className="hero-copy">{copy.heroDescription}</p>
-        <div className="hero-actions" aria-label="Primary learning actions">
+        {/* role="group" is what makes the label reach assistive tech: an aria-label on a
+            plain div is ignored, because a div exposes no role to attach a name to. */}
+        <div className="hero-actions" role="group" aria-label="Primary learning actions">
           <button type="button" onClick={onStartPractice}>
             {copy.startPracticeLabel}
           </button>

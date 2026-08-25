@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { questions } from './questions';
 import { syllabusChapters } from './syllabus';
 
-describe('questions data — semantic checks', () => {
+describe('question bank contract', () => {
   it('covers every syllabus chapter with at least one question', () => {
     const covered = new Set(questions.map((question) => question.chapterId));
     const missing = syllabusChapters.filter((chapter) => !covered.has(chapter.id)).map((chapter) => chapter.id);
@@ -82,6 +82,9 @@ describe('questions data — semantic checks', () => {
     expect(offenders).toEqual([]);
   });
 
+  // Maintainer-local check: the author log is not published with the repo, so this
+  // no-ops for anyone else. It is a path reference, not a cited rationale — nothing
+  // a reader needs to open in order to understand a decision.
   it('records every question id in the author log when the log file exists', () => {
     const logPath = resolve(__dirname, '../../.agents/authoring/question-sources.md');
     if (!existsSync(logPath)) {

@@ -15,7 +15,12 @@ export class FlashcardDeckPage {
   readonly prompt: Locator;
   readonly answer: Locator;
   readonly mastery: Locator;
-  readonly level: Locator;
+  /**
+   * The visually-hidden text that actually reaches assistive tech. The visible dots and
+   * figures beside it are `aria-hidden` decoration, so this is the only element worth
+   * asserting the mastery level on.
+   */
+  readonly levelStatus: Locator;
   readonly gradeGroup: Locator;
   readonly showAnswerButton: Locator;
 
@@ -23,7 +28,7 @@ export class FlashcardDeckPage {
     this.prompt = page.getByTestId('flashcard-prompt');
     this.answer = page.getByTestId('flashcard-answer');
     this.mastery = page.getByTestId('flashcard-mastery');
-    this.level = page.getByTestId('flashcard-level');
+    this.levelStatus = page.getByTestId('flashcard-level-status');
     this.gradeGroup = page.getByRole('group', { name: 'Rate your recall' });
     this.showAnswerButton = page.getByRole('button', { name: meta.flashcardsShowAnswerLabel });
   }

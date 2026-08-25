@@ -47,7 +47,7 @@ export class QuizPanelPage {
   /** Answers every rendered question card, correctly or incorrectly. */
   async answerAll({ correct }: { correct: boolean } = { correct: true }): Promise<void> {
     const count = await this.cardCount();
-    await this.answerExactly(correct ? count : 0);
+    await this.answerCards(count, correct ? count : 0);
   }
 
   /**
@@ -60,22 +60,32 @@ export class QuizPanelPage {
       throw new Error(`Cannot answer ${correctCount} of only ${count} rendered questions correctly`);
     }
 
-    for (let index = 0; index < count; index += 1) {
-      await this.answerCard(this.questionCards.nth(index), index < correctCount);
-    }
+    await this.answerCards(count, correctCount);
   }
 
   async submit(): Promise<void> {
     await this.submitButton.click();
   }
 
-  private async cardCount(): Promise<number> {
-    const count = await this.questionCards.count();
-    if (count === 0) {
-      throw new Error('No question cards rendered');
+  private async answerCards(total: number, correctCount: number): Promise<void> {
+    for (let index = 0; index < total; index += 1) {
+      await this.answerCard(this.questionCards.nth(index), index < correctCount);
     }
+  }
 
-    return count;
+  /**
+   * How many question cards the quiz is showing.
+   *
+   * `count()` does not retry, so it must not be the first thing to touch the page: read
+   * mid-render it returns a partial number and the caller silently answers fewer
+   * questions than the quiz has, failing later on a confusing score rather than here on
+   * a clear timeout. Waiting for the first card is sufficient — React commits the whole
+   * list in a single pass, so one visible card means all of them are in the DOM.
+   */
+  private async cardCount(): Promise<number> {
+    await this.questionCards.first().waitFor({ state: 'visible' });
+
+    return this.questionCards.count();
   }
 
   /**

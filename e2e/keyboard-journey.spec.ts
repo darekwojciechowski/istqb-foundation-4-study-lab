@@ -34,13 +34,13 @@ async function describeFocus(page: Page): Promise<FocusedElement | null> {
 test.describe('keyboard-only journey', () => {
   // WebKit (desktop Safari and mobile-safari alike) ships Safari's "Press Tab to
   // highlight each item" preference off, so Tab reaches form controls but never links
-  // or buttons. That is a platform default rather than an app behaviour — asserting it
+  // or buttons. That is a platform default rather than an app behavior — asserting it
   // here would test the browser. The markup this spec covers (skip link, native radio
   // groups, real buttons) is engine-independent, and the axe scans run on every state.
   test.skip(({ browserName }) => browserName === 'webkit', 'WebKit does not Tab to links by default');
 
   test(
-    'a learner can complete and submit a practice quiz without ever using a pointer',
+    'a practice quiz completes and submits without a pointer',
     {
       tag: ['@critical'],
       annotation: [

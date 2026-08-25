@@ -14,6 +14,7 @@ export const REQ = {
   ATTEMPT_HISTORY: 'REQ-PROG-002 — submitted attempts accumulate in the attempt history',
   PROGRESS_PERSISTENCE: 'REQ-PROG-003 — progress survives a page reload via local storage',
   PROGRESS_RECOVERY: 'REQ-PROG-004 — corrupted stored progress is discarded and the app boots to a clean default state',
+  PROGRESS_DEFERRED_WRITE: 'REQ-PROG-005 — nothing is written to local storage until the learner studies',
   FLASHCARD_REVIEW: 'REQ-CARD-001 — a flashcard can be revealed, graded, and replaced by the next card',
   FLASHCARD_MASTERY: 'REQ-CARD-002 — mastering the last card in a chapter completes the deck and the mastery state persists',
   SCENARIO_SHUFFLE: 'REQ-SCEN-001 — a scenario drill can be shuffled to a different prompt',

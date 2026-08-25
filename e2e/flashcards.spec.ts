@@ -18,6 +18,15 @@ const CHAPTER_CARD_COUNT = CHAPTER_CARD_IDS.length;
 /** An `easy` grade promotes two boxes, so this is exactly one grade short of mastery. */
 const ONE_GRADE_SHORT_BOX = MASTERED_BOX - 2;
 
+const CARD_GRADED_ANNOUNCEMENT = 'Card rated. Showing the next card.';
+
+/**
+ * The zero-width space `useAnnouncer` alternates so that repeating an announcement still
+ * changes the live region's text node. Invisible, silent, and stripped by Playwright's
+ * text normalization — only a raw `textContent()` read can see it.
+ */
+const SILENT_ANNOUNCEMENT_MARKER = '\u200B';
+
 /**
  * Builds a deck where every card is mastered except the one the app will actually
  * open on, leaving that card a single Easy grade short.
@@ -52,7 +61,7 @@ function seedOneGradeShortOfFullMastery(): { cardStates: CardStates; targetId: s
 
 test.describe('flashcards SRS', () => {
   test(
-    'learner can reveal a card, grade it, and advance to the next card',
+    'revealing and grading a card advances to the next card',
     {
       tag: ['@smoke'],
       annotation: [{ type: 'requirement', description: REQ.FLASHCARD_REVIEW }],
@@ -61,8 +70,7 @@ test.describe('flashcards SRS', () => {
       await test.step('arrange: open the app on an unstarted deck', async () => {
         await app.goto();
         await expect(flashcards.prompt).toBeVisible();
-        await expect(flashcards.level).toHaveAttribute(
-          'aria-label',
+        await expect(flashcards.levelStatus).toHaveText(
           `${meta.flashcardsLevelLabel} 0 / ${MAX_BOX}`,
         );
         await expect(flashcards.mastery).toContainText(
@@ -80,7 +88,42 @@ test.describe('flashcards SRS', () => {
       await test.step('assert: the deck advances to the next unrevealed card', async () => {
         await expect(flashcards.answer).toBeHidden();
         await expect(flashcards.showAnswerButton).toBeVisible();
-        await expect(app.announcer).toHaveText('Card rated. Showing the next card.');
+        await expect(app.announcer).toHaveText(CARD_GRADED_ANNOUNCEMENT);
+      });
+    },
+  );
+
+  test(
+    'a second identical grade still changes the live region text',
+    {
+      tag: ['@critical'],
+      annotation: [{ type: 'requirement', description: REQ.FLASHCARD_REVIEW }],
+    },
+    async ({ app, flashcards }) => {
+      await test.step('arrange: open the deck', async () => {
+        await app.goto();
+        await expect(flashcards.prompt).toBeVisible();
+      });
+
+      /**
+       * Every grade announces the same sentence, and a live region is only spoken when
+       * its text node actually changes — so it is the *second* grade that exposes the
+       * defect, which is why the first flashcard spec above cannot see it.
+       *
+       * These assertions read raw `textContent` through `expect.poll` rather than
+       * `toHaveText`, because `toHaveText` strips zero-width characters during
+       * normalization and would report both grades as identical text. Grading is the
+       * only thing that announces in this test, so the marker's parity is deterministic:
+       * marked on the first announcement, bare on the second.
+       */
+      await test.step('act and assert: grade two cards identically', async () => {
+        await flashcards.reviewCard('good');
+        await expect
+          .poll(() => app.announcer.textContent())
+          .toBe(`${CARD_GRADED_ANNOUNCEMENT}${SILENT_ANNOUNCEMENT_MARKER}`);
+
+        await flashcards.reviewCard('good');
+        await expect.poll(() => app.announcer.textContent()).toBe(CARD_GRADED_ANNOUNCEMENT);
       });
     },
   );
@@ -107,8 +150,7 @@ test.describe('flashcards SRS', () => {
           `${CHAPTER_CARD_COUNT - 1} / ${CHAPTER_CARD_COUNT} ${meta.flashcardsMasteryLabel}`,
         );
         // The open card is the unmastered one — the premise the single grade below rests on.
-        await expect(flashcards.level).toHaveAttribute(
-          'aria-label',
+        await expect(flashcards.levelStatus).toHaveText(
           `${meta.flashcardsLevelLabel} ${ONE_GRADE_SHORT_BOX} / ${MAX_BOX}`,
         );
       });
@@ -135,13 +177,13 @@ test.describe('flashcards SRS', () => {
 
 test.describe('scenario drills', () => {
   test(
-    'learner can read a scenario with its coaching hint and shuffle to a different one',
+    'a scenario drill shows its coaching hint and shuffles to a different prompt',
     {
       tag: ['@smoke'],
       annotation: [{ type: 'requirement', description: REQ.SCENARIO_SHUFFLE }],
     },
     async ({ app, page }) => {
-      const scenarioPrompt = page.getByLabel('Scenario drill prompt');
+      const scenarioPrompt = page.getByTestId('scenario-prompt');
       let promptBeforeShuffle: string | null = null;
 
       await test.step('arrange: read the current scenario and its hint', async () => {

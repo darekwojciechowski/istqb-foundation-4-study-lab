@@ -55,12 +55,15 @@ export function PracticeToolsSection({
             <p className="flashcard-prompt" data-testid="flashcard-prompt">
               {currentCard.prompt}
             </p>
-            <p
-              className="flashcard-level"
-              data-testid="flashcard-level"
-              aria-label={`${copy.flashcardsLevelLabel} ${currentBox} / ${maxBox}`}
-            >
-              <span>{copy.flashcardsLevelLabel}</span>
+            {/* The level used to live in an aria-label on this paragraph while every
+                visible child was aria-hidden, so a screen reader announced the label
+                with no number attached. Real text in a visually-hidden span carries the
+                state instead; the dots and figures beside it are decoration. */}
+            <p className="flashcard-level" data-testid="flashcard-level">
+              <span className="sr-only" data-testid="flashcard-level-status">
+                {copy.flashcardsLevelLabel} {currentBox} / {maxBox}
+              </span>
+              <span aria-hidden="true">{copy.flashcardsLevelLabel}</span>
               <span className="flashcard-level-dots" aria-hidden="true">
                 <span className="flashcard-level-dots-filled">{'●'.repeat(currentBox)}</span>
                 {'○'.repeat(maxBox - currentBox)}
@@ -109,7 +112,11 @@ export function PracticeToolsSection({
         />
         {chapterScenario ? (
           <>
-            <p aria-label="Scenario drill prompt">{chapterScenario.prompt}</p>
+            {/* An aria-label here *replaced* the prompt for assistive tech — the label
+                becomes the accessible name of the paragraph, so the drill itself went
+                unread. A visually-hidden heading names the passage without hiding it. */}
+            <h3 className="sr-only">Scenario drill prompt</h3>
+            <p data-testid="scenario-prompt">{chapterScenario.prompt}</p>
             <div className="hint">
               <strong>{copy.scenarioCoachingHintLabel}:</strong> {chapterScenario.coachingHint}
             </div>

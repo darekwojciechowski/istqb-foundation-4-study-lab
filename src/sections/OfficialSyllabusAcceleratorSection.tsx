@@ -25,13 +25,17 @@ export function OfficialSyllabusAcceleratorSection({
   return (
     <CollapsiblePanel eyebrow={copy.eyebrow} title={copy.title}>
       <p className="muted">{copy.description}</p>
-      <div className="syllabus-stats" aria-label="Official syllabus facts">
+      {/* A description list rather than a labelled div: the old aria-label sat on a div
+          with no role and was ignored, leaving the figures as loose text. dt/dd pairs
+          state the relationship itself, the same way the hero's exam facts do. */}
+      <dl className="syllabus-stats" data-testid="syllabus-stats">
         {officialSyllabusGuide.stats.map((stat) => (
-          <span key={stat.label}>
-            {stat.value} {stat.label}
-          </span>
+          <div className="syllabus-stat" key={stat.label}>
+            <dt>{stat.label}</dt>
+            <dd>{stat.value}</dd>
+          </div>
         ))}
-      </div>
+      </dl>
       <div className="syllabus-sprint-grid">
         {syllabusAccelerator.map((sprint) => (
           <article key={sprint.title} className="syllabus-sprint-card">

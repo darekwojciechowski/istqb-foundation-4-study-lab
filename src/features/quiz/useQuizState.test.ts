@@ -21,7 +21,7 @@ const defaultOptions = {
 } as const;
 
 describe('useQuizState', () => {
-  it('initialises in practice mode with empty answers and not submitted', () => {
+  it('starts in practice mode with no answers and no submission', () => {
     const { result } = renderHook(() => useQuizState(defaultOptions));
 
     expect(result.current.quizMode).toBe('practice');
@@ -35,7 +35,7 @@ describe('useQuizState', () => {
     expect(result.current.quizQuestions).toHaveLength(1);
   });
 
-  it('updateAnswer sets the answer and correct score reflects a correct selection', () => {
+  it('scores a correct selection as one correct answer', () => {
     const { result } = renderHook(() => useQuizState(defaultOptions));
 
     const firstQuestion = result.current.quizQuestions[0];
@@ -49,7 +49,7 @@ describe('useQuizState', () => {
     expect(result.current.score.correct).toBe(1);
   });
 
-  it('markSubmitted flips isSubmitted to true', () => {
+  it('reports the quiz as submitted once the learner submits', () => {
     const { result } = renderHook(() => useQuizState(defaultOptions));
 
     act(() => {
@@ -59,7 +59,7 @@ describe('useQuizState', () => {
     expect(result.current.isSubmitted).toBe(true);
   });
 
-  it('applyContext clears answers, resets isSubmitted, and switches quizMode to exam', () => {
+  it('discards draft answers and the previous result when switching to exam mode', () => {
     const { result } = renderHook(() => useQuizState(defaultOptions));
 
     act(() => {
@@ -79,7 +79,7 @@ describe('useQuizState', () => {
     expect(result.current.answers).toEqual({});
   });
 
-  it('applyContext with exam mode draws from all chapters up to examCount', () => {
+  it('draws exam questions from every chapter up to the exam size', () => {
     const { result } = renderHook(() => useQuizState({ ...defaultOptions, examCount: 3 }));
 
     act(() => {
@@ -92,7 +92,7 @@ describe('useQuizState', () => {
     expect(chapterIds.size).toBeGreaterThan(0);
   });
 
-  it('hasDraftAnswers is false initially, true after answering, false after markSubmitted', () => {
+  it('reports draft answers only between the first answer and submission', () => {
     const { result } = renderHook(() => useQuizState(defaultOptions));
 
     expect(result.current.hasDraftAnswers()).toBe(false);
@@ -111,7 +111,7 @@ describe('useQuizState', () => {
     expect(result.current.hasDraftAnswers()).toBe(false);
   });
 
-  it('practice mode filters questions to practiceChapterId', () => {
+  it('limits practice questions to the active chapter', () => {
     const { result } = renderHook(() => useQuizState({ ...defaultOptions, practiceCount: 5 }));
 
     const chapterIds = new Set(result.current.quizQuestions.map((q) => q.chapterId));
