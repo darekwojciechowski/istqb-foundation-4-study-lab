@@ -63,6 +63,12 @@ CLAUDE.md
 PROGRESS.md
 .agents
 
+# Maintainer-local docs and their generators — not published with the repo
+docs/adr/
+docs/testing/
+scripts/generate-traceability.mjs
+scripts/check-adr-citations.mjs
+
 # MCP / agent tooling
 mcp.json
 mcp.example.json
