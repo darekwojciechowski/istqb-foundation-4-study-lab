@@ -87,6 +87,7 @@ Run all checks before opening a pull request:
 npm run lint
 npm test -- --run
 npm run build
+npm run test:e2e
 ```
 
 What each command does:
@@ -94,6 +95,14 @@ What each command does:
 - `npm run lint` checks TypeScript and React code style.
 - `npm test -- --run` runs the Vitest test suite once.
 - `npm run build` type-checks and creates a production bundle in `dist/`.
+- `npm run test:e2e` runs the Playwright end-to-end suite in a real browser. This is a required
+  CI job, so skipping it locally can still fail the pull request. Install the browsers once with
+  `npx playwright install --with-deps`.
+
+Two more test commands are useful while working, though CI does not run them:
+
+- `npm run test:coverage` produces a v8 coverage report.
+- `npm run test:e2e:ui` opens Playwright's interactive UI mode for debugging a failing spec.
 
 ## Keep dependencies current
 
@@ -124,7 +133,9 @@ npm ci
 
 Content tests protect the public repository rules:
 
-- all learner-facing content must stay in English
+- learner-facing content must stay ASCII-only — the guard covers flashcards, questions,
+  scenarios, and syllabus chapters, and is a proxy for English-only copy rather than a
+  proof of it; the pack's `meta` strings are outside its scope
 - official and third-party questions must be linked, not copied
 - each quiz question must have four options, one correct answer, and a rationale
 
@@ -151,7 +162,9 @@ The app is a static Vite build. The `dist/` directory can be hosted on GitHub Pa
 1. Push the repository to GitHub.
 2. Open **Settings → Pages → Build and deployment**.
 3. Set **Source** to **GitHub Actions**.
-4. The `.github/workflows/pages.yml` workflow will build and deploy `dist/` automatically on every push to `main`.
+4. The `.github/workflows/pages.yml` workflow runs after the CI workflow completes on `main` and
+   deploys `dist/` only when that run succeeded, so a red CI blocks the deploy instead of racing it.
+   You can also deploy manually from the Actions tab, which bypasses the check by design.
 
 The live demo will be available at:
 
