@@ -161,25 +161,6 @@ Common mistake patterns:
 - ignoring risk impact
 - overestimating what test automation can prove
 
-## Step 7: Use external resources selectively
-
-The app links curated external resources:
-
-- official/member-board resources
-- blog explanations
-- mock-test sites
-- community discussions
-- YouTube tutorials
-
-Use them when a concept does not click. Do not jump between too many resources at once.
-
-Recommended approach:
-
-1. Start with the official syllabus.
-2. Use this app for practice and recall.
-3. Use one external explanation if a topic remains unclear.
-4. Return to official sample exams for calibration.
-
 ## Fast review checklist
 
 Before exam day, make sure you can answer these without notes:
