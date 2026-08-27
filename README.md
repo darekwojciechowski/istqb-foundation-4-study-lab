@@ -97,6 +97,27 @@ scripts\run-windows.cmd
 
 For a full local setup guide and troubleshooting, see [docs/running.md](docs/running.md).
 
+## Testing
+
+Unit and component tests run under Vitest; end-to-end tests run under Playwright against a real browser.
+
+```bash
+npm test -- --run       # Vitest suite, once
+npm run test:coverage   # Vitest with a v8 coverage report
+npm run test:e2e        # Playwright end-to-end suite
+npm run test:e2e:ui     # Playwright interactive UI mode
+```
+
+The Playwright suite needs browsers on first run:
+
+```bash
+npx playwright install --with-deps
+```
+
+CI runs `npm run lint`, `npm test -- --run` and `npm run build` in one job and
+`npm run test:e2e -- --fail-on-flaky-tests` in a second required job, so run the e2e suite
+locally before opening a pull request — a test that only goes green on retry fails CI.
+
 ## Architecture
 
 The app is a **pack-driven study shell** — the React component tree has no knowledge of the subject being studied. All content and UI copy flows through a single `KnowledgePack` object defined in [`src/knowledge/types.ts`](src/knowledge/types.ts).
@@ -110,7 +131,7 @@ Key design decisions:
 
 - **Type-enforced pack contract**: the `KnowledgePack` interface ([`src/knowledge/types.ts`](src/knowledge/types.ts)) uses `DeepReadonly<T>` and a `NonEmptyReadonlyArray` guard — a missing `meta` or empty `syllabusChapters` fails the build, not runtime. A complete "World Capitals & Geography" demo pack proves zero subject leakage ([`src/App.demoPack.test.tsx`](src/App.demoPack.test.tsx)).
 - **Pure logic, extracted hooks**: quiz/progress/SRS rules are pure, React-free functions in [`src/lib/`](src/lib/) driven by focused hooks (`useQuizOrchestration`, `useProgressSync`, `useExamTimer`) — the layering shown above, each unit-tested in isolation.
-- **Content-integrity tests**: beyond the unit/e2e runs above, dedicated tests guard answer distribution, per-chapter minimums, and English-only copy.
+- **Content-integrity tests**: beyond the unit/e2e runs above, dedicated tests guard answer distribution, per-chapter minimums, and an ASCII-only check over flashcards, questions, scenarios, and syllabus chapters — a proxy for English-only copy, not a proof of it, and one that does not cover the pack's `meta` strings.
 
 ## Switching to another certificate or topic
 
