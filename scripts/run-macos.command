@@ -21,13 +21,13 @@ echo
 
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js is required but was not found."
-  echo "Install Node.js 24 or newer from https://nodejs.org/ and run this script again."
+  echo "Install Node.js 26 or newer from https://nodejs.org/ and run this script again."
   exit 1
 fi
 
 if ! command -v npm >/dev/null 2>&1; then
   echo "npm is required but was not found."
-  echo "Install Node.js 24 or newer from https://nodejs.org/ and run this script again."
+  echo "Install Node.js 26 or newer from https://nodejs.org/ and run this script again."
   exit 1
 fi
 
