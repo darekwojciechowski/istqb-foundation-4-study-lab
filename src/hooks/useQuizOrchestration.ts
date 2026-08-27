@@ -6,6 +6,7 @@ import { useFlashcardReview, type FlashcardReviewResult } from '../features/quiz
 import { useQuizState, type QuizMode, type UseQuizStateResult } from '../features/quiz/useQuizState';
 import type { DeepReadonly, KnowledgePack } from '../knowledge/types';
 import { playExamEnd, playExamStart } from '../lib/examAudio';
+import { prefersReducedMotion } from '../lib/motion';
 import { recordCardGrade, recordQuizResult, toggleChapterComplete, type LearnerProgress } from '../lib/progress';
 import { createQuizSeed, shuffleBySeed, type ChapterId } from '../lib/quiz';
 import type { CardGrade } from '../lib/srs';
@@ -168,7 +169,10 @@ export function useQuizOrchestration({ pack }: UseQuizOrchestrationOptions): Qui
     }
 
     if (shouldScrollToQuiz) {
-      quizSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      quizSectionRef.current?.scrollIntoView({
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+        block: 'start',
+      });
       quizSectionRef.current?.focus({ preventScroll: true });
     }
   }

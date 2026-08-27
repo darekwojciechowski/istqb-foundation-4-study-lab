@@ -20,6 +20,7 @@ export const REQ = {
   SCENARIO_SHUFFLE: 'REQ-SCEN-001 — a scenario drill can be shuffled to a different prompt',
   KEYBOARD_JOURNEY: 'REQ-A11Y-001 — the full practice journey is completable without a pointer',
   ACCESSIBILITY_SCAN: 'REQ-A11Y-002 — the app raises no automated WCAG violations in its main states',
+  REDUCED_MOTION: 'REQ-A11Y-003 — a stated reduced-motion preference suppresses decorative animation',
 } as const;
 
 export type RequirementId = (typeof REQ)[keyof typeof REQ];

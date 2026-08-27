@@ -24,6 +24,13 @@ export default defineConfig({
     // Trailing slash is load-bearing: AppPage.goto() navigates to './', which only
     // resolves inside the deployed base path while baseURL ends in a slash.
     baseURL: PREVIEW_URL,
+    // Playwright refuses to act on an element until its box holds still across two animation
+    // frames, and that check is driven by requestAnimationFrame: it makes no progress at all
+    // while the browser is slow to produce frames. The hero animates forever, on every page
+    // of every worker, which is exactly the rendering work a loaded CI runner cannot spare.
+    // Asking for reduced motion turns it off through the app's own accessibility path.
+    // See docs/adr/0009-e2e-runs-with-reduced-motion.md
+    contextOptions: { reducedMotion: 'reduce' },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
