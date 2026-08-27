@@ -7,6 +7,9 @@ describe('App', () => {
   beforeEach(() => {
     HTMLElement.prototype.scrollIntoView = vi.fn();
     window.localStorage.clear();
+    // Unstub here rather than at the end of the stubbing test: a failed assertion never
+    // reaches that line, and a leaked matchMedia would silently reshape later tests.
+    vi.unstubAllGlobals();
   });
 
   describe('rendering', () => {
@@ -303,6 +306,22 @@ describe('App', () => {
       const quizSection = screen.getByLabelText(/Interactive quiz/i);
 
       expect(quizSection.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+      expect(quizSection).toHaveFocus();
+    });
+
+    it('jumps to the quiz section without animating it when reduced motion is preferred', () => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({ matches: true, media: query }) as unknown as MediaQueryList),
+      );
+
+      render(<App />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Start chapter practice/i }));
+
+      const quizSection = screen.getByLabelText(/Interactive quiz/i);
+
+      expect(quizSection.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
       expect(quizSection).toHaveFocus();
     });
 

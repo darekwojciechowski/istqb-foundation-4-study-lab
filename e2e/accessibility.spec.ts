@@ -116,6 +116,26 @@ test.describe('accessibility', () => {
   );
 
   test(
+    'a reduced-motion preference leaves nothing on the page animating',
+    {
+      tag: ['@critical'],
+      annotation: [{ type: 'requirement', description: REQ.REDUCED_MOTION }],
+    },
+    async ({ app, page }) => {
+      await app.goto();
+
+      // Every project runs with the preference set (see docs/adr/0009), so this asserts two
+      // things at once: the app honours it, and the suite is still asking for it. Naming the
+      // animations rather than counting them makes a regression say which one came back.
+      const running = await page.evaluate(() =>
+        document.getAnimations().map((animation) => (animation as CSSAnimation).animationName ?? 'transition'),
+      );
+
+      expect(running).toEqual([]);
+    },
+  );
+
+  test(
     'the submitted results state has no automated WCAG violations',
     {
       tag: ['@critical'],

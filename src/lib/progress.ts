@@ -119,6 +119,10 @@ export function sanitizeProgress<TChapterId extends string = string>(
   };
 }
 
+// Trust boundary: loadProgress is where untrusted JSON enters — a learner can edit or
+// corrupt localStorage by hand, and an older build may have written a different shape.
+// It guarantees only the top-level shape, falling back to a default on anything it
+// cannot read. Element-level validation is sanitizeProgress's job, not this one's.
 export function loadProgress<TChapterId extends string = string>(
   storage: ReadableStorage,
   storageKey = DEFAULT_STORAGE_KEY,
@@ -173,9 +177,9 @@ function isQuotaExceededError(error: unknown): boolean {
   );
 }
 
-// Trust boundary: parses untrusted JSON from localStorage. All field
-// validation for QuizAttempt happens here; downstream code may assume
-// the discriminated union holds.
+// Checks the `mode` discriminant only, and defers the field checks to
+// isValidAttemptShape. Together the two make the discriminated union safe to
+// assume downstream; neither is sufficient alone.
 function isValidQuizAttempt(attempt: unknown): attempt is QuizAttempt {
   if (attempt === null || typeof attempt !== 'object') {
     return false;
@@ -192,6 +196,9 @@ function isValidQuizAttempt(attempt: unknown): attempt is QuizAttempt {
   }
 }
 
+// The field half of the QuizAttempt check reached through isValidQuizAttempt. The
+// bounds matter as much as the types: a stored `total` of 0 or a `correct` above it
+// would render as a NaN or above-100% score rather than being rejected.
 function isValidAttemptShape(candidate: Record<string, unknown>): boolean {
   const { correct, total, takenAt } = candidate;
   return (

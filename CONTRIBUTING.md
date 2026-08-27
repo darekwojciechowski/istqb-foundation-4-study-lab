@@ -35,7 +35,11 @@ Run:
 npm run lint
 npm test -- --run
 npm run build
+npm run test:e2e
 ```
+
+The end-to-end suite is a required CI job, so a green lint/unit/build run is not enough on
+its own. On first run, install the browsers with `npx playwright install --with-deps`.
 
 ## Adding practice questions
 

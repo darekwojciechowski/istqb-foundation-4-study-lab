@@ -443,7 +443,7 @@ export const questions: PracticeQuestion[] = [
     reference: 'CTFL 4.0 chapter 6 - automation risks and maintainability',
   },
 
-  // === v2 expansion: fundamentals 6-24 ===
+  // === v2 expansion: fundamentals ===
   {
     id: 'fundamentals-6',
     chapterId: 'fundamentals',
@@ -749,7 +749,7 @@ export const questions: PracticeQuestion[] = [
     reference: 'FL-1.1.1',
   },
 
-  // === v2 expansion: sdlc 6-15 ===
+  // === v2 expansion: sdlc ===
   {
     id: 'sdlc-6',
     chapterId: 'sdlc',
@@ -911,7 +911,7 @@ export const questions: PracticeQuestion[] = [
     reference: 'FL-2.3.1',
   },
 
-  // === v2 expansion: static-testing 6-12 ===
+  // === v2 expansion: static-testing ===
   {
     id: 'static-6',
     chapterId: 'static-testing',
@@ -1025,7 +1025,7 @@ export const questions: PracticeQuestion[] = [
     reference: 'FL-3.2.2',
   },
 
-  // === v2 expansion: test-techniques 8-33 ===
+  // === v2 expansion: test-techniques ===
   {
     id: 'techniques-8',
     chapterId: 'test-techniques',
@@ -1579,7 +1579,7 @@ export const questions: PracticeQuestion[] = [
     reference: 'FL-4.4.1',
   },
 
-  // === v2 expansion: test-management 8-27 ===
+  // === v2 expansion: test-management ===
   {
     id: 'management-8',
     chapterId: 'test-management',
@@ -1935,7 +1935,7 @@ export const questions: PracticeQuestion[] = [
     reference: 'FL-5.2.1',
   },
 
-  // === v2 expansion: test-tools 6-9 ===
+  // === v2 expansion: test-tools ===
   {
     id: 'tools-6',
     chapterId: 'test-tools',

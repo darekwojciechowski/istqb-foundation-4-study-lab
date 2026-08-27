@@ -9,7 +9,7 @@ echo.
 where node >nul 2>nul
 if errorlevel 1 (
   echo Node.js is required but was not found.
-  echo Install Node.js 24 or newer from https://nodejs.org/ and run this script again.
+  echo Install Node.js 26 or newer from https://nodejs.org/ and run this script again.
   echo.
   pause
   exit /b 1
@@ -18,7 +18,7 @@ if errorlevel 1 (
 where npm >nul 2>nul
 if errorlevel 1 (
   echo npm is required but was not found.
-  echo Install Node.js 24 or newer from https://nodejs.org/ and run this script again.
+  echo Install Node.js 26 or newer from https://nodejs.org/ and run this script again.
   echo.
   pause
   exit /b 1
